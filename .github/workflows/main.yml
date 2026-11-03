@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Pull upstream changes
-        uses: dabreadman/sync-upstream-repo@v3.4.1
+        uses: dabreadman/sync-upstream-repo@v3.4
         with:
           # 填入源仓库的 git 地址或 owner/repo（例如：upstream-user/repo-name）
           upstream_repo: "https://github.com/huangxd-/danmu_api.git"
