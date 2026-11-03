@@ -25,13 +25,15 @@ jobs:
 
       - name: Force sync upstream
         run: |
-          # 添加源仓库
           git remote add upstream https://github.com/huangxd-/danmu_api.git
           git fetch upstream
           
-          # 强制将本地 main 分支重置为源仓库的 main 分支（抹平所有冲突）
           git checkout main
-          git reset --hard upstream/main
           
-          # 强制推送到你的 GitHub 仓库
+          git checkout upstream/main -- .
+          git reset
+          git checkout -- .github/workflows/ || true
+          
+          git add .
+          git commit -m "Auto-sync with upstream (excluding workflows)" || echo "No changes to commit"
           git push origin main --force
