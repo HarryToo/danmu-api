@@ -1,0 +1,42 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天北京时间早上 8 点自动同步
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Git configuration
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Safe Sync Upstream
+        run: |
+          git remote add upstream https://github.com/huangxd-/danmu_api.git
+          git fetch upstream
+          
+          git checkout main
+          
+          # 尝试合并源仓库代码，但不直接完成提交
+          git merge upstream/main --allow-unrelated-histories --no-commit || true
+          
+          # 核心保护：强制把 .github 文件夹还原为本地原样，绝对不让它被删除或修改
+          git checkout HEAD -- .github || true
+          
+          # 提交并推送更新
+          git add .
+          git commit -m "Auto-sync with upstream (preserving .github)" || echo "No changes to commit"
+          git push origin main || echo "Nothing to push"
