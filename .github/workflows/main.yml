@@ -1,0 +1,28 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天 UTC 时间 0点（北京时间早上 8 点）执行一次，可自行修改
+  workflow_dispatch: # 允许你在 GitHub 页面手动点击按钮同步
+
+jobs:
+  sync:
+  
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 需要写入权限以推送更新
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pull upstream changes
+        uses: dabreadman/sync-upstream-repo@v3.4.1
+        with:
+          # 填入源仓库的 git 地址或 owner/repo（例如：upstream-user/repo-name）
+          upstream_repo: "https://github.com/huangxd-/danmu_api.git"
+          upstream_branch: "main" # 源仓库的分支，通常是 main 或 master
+          target_branch: "main"   # 你仓库的分支
+          token: ${{ secrets.GITHUB_TOKEN }}
