@@ -1,0 +1,48 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天北京时间早上 8 点自动同步
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SYNC_TOKEN }}
+          fetch-depth: 0
+
+      - name: Git configuration
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Force Sync Upstream (Keep .github)
+        run: |
+          git remote add upstream https://github.com/huangxd-/danmu_api.git || true
+          git fetch upstream main
+
+          # 备份当前 .github 目录到临时目录
+          rm -rf /tmp/github_backup
+          cp -r .github /tmp/github_backup
+
+          # 切换到 main 并彻底对齐到上游最新提交
+          git checkout -B main upstream/main
+
+          # 还原本地 .github 目录
+          rm -rf .github
+          cp -r /tmp/github_backup .github
+
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Force sync with upstream (keep local .github)"
+            git push --force https://x-access-token:${{ secrets.SYNC_TOKEN }}@github.com/HarryToo/danmu-api.git main
+          fi
